@@ -213,6 +213,24 @@ Para transformar a Abril de un asistente pasivo a uno proactivo y conectado con 
 
 ---
 
+## Posibles Implementaciones a Futuro (Fase 16+)
+
+### 1. Integracion y Control de la PC Principal
+*   **Que es**: Habilidad de Abril para interactuar de manera remota con tu ordenador de uso diario.
+*   **Tecnologia**: Un servidor/puente ligero en Python ejecutandose en tu PC principal, escuchando comandos cifrados por red local (sockets) provenientes del backend de Abril.
+*   **Ejemplos**: *"Abril, abre la aplicacion de Steam en la computadora"* o *"Abril, bloquea la PC"*.
+
+### 2. Automatizacion Basada en Criterios de Presencia (Sensores)
+*   **Que es**: Ejecutar acciones inteligentes (como apagar luces o climatizacion) bajo reglas condicionales complejas basadas en sensores de entorno.
+*   **Tecnologia**: Integracion de sensores de presencia humana o movimiento (PIR / Radar de microondas) via Wi-Fi (usando microcontroladores ESP32 y protocolo MQTT o HTTP local).
+*   **Ejemplos**: Apagar automaticamente las luces y altavoces de la habitacion si no se detecta presencia humana durante mas de 10 minutos.
+
+### 3. Sincronizacion y Vinculacion de Cuentas Personales
+*   **Que es**: Conectar los flujos de Abril a tus cuentas y servicios externos preferidos para consulta y control directo.
+*   **Tecnologia**: Desarrollo de modulos de autenticacion ligera (OAuth o Webhooks directos) para integrar calendarios, correo electronico, servicios de streaming de musica (ej. Spotify), etc.
+
+---
+
 ## Estimacion de Tiempos de Desarrollo
 
 | Fase | Duracion Estimada | Dificultad |
