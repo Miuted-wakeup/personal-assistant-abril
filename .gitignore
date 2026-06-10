@@ -1,0 +1,32 @@
+# Entornos virtuales de Python
+venv/
+env/
+.venv/
+
+# Variables de entorno (API Keys, Tokens)
+.env
+.env.local
+
+# Archivos de Cache de Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Bases de datos locales
+data/chromadb/
+
+# Archivos de Log
+logs/
+*.log
+
+# Assets multimedia pesados (modelos, audios, videos grandes)
+assets/videos/*.mp4
+assets/videos/*.mkv
+assets/voices/*.onnx
+assets/voices/*.pth
+assets/voices/*.bin
+
+# Configuraciones de IDEs y OS
+.vscode/
+.idea/
+.DS_Store

@@ -1,0 +1,20 @@
+{
+  "system": {
+    "name": "Abril",
+    "language": "es",
+    "timezone": "America/Bogota"
+  },
+  "audio": {
+    "wake_word_general": "abril",
+    "wake_word_privado": "escucha abril",
+    "input_device_index": null,
+    "sample_rate": 16000
+  },
+  "visual": {
+    "mpv_socket": "/tmp/mpv-socket"
+  },
+  "apis": {
+    "groq_model_llm": "llama-3.1-8b-instant",
+    "groq_model_stt": "whisper-large-v3"
+  }
+}
