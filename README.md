@@ -1,6 +1,6 @@
 # Asistente Virtual Autonomo: Abril
 
-> **Filosofia de Ultra Bajo Consumo**: A diferencia de otros asistentes que requieren hardware de ultima generacion y decenas de gigabytes de VRAM (como Yui), Abril esta disenada desde cero para la eficiencia absoluta. Delegando la carga pesada a la nube y manteniendo interfaces locales ultraligeras, corre perfectamente 24/7 en procesadores de hace mas de una decada.
+> **Filosofia de Ultra Bajo Consumo**: A diferencia de otros asistentes de IA actuales que exigen hardware de ultima generacion y decenas de gigabytes de VRAM, Abril esta disenada desde cero para la eficiencia absoluta. Delegando el razonamiento a la nube a traves de APIs ultrarrapidas y manteniendo interfaces locales hiper-optimizadas, corre perfectamente 24/7 en procesadores de hace mas de una decada.
 
 Este es el repositorio del proyecto **Abril**, un asistente de voz inteligente, autonomo y de presencia fisica constante 24/7 en habitacion, disenado bajo una arquitectura hibrida local/nube para optimizar recursos en hardware limitado. Creado por **Muted**.
 
@@ -124,6 +124,10 @@ abril-asistente/
 | **Fase 7-8** | Memoria ChromaDB e Interfaz Visual IPC | Planeado |
 | **Fase 9-10** | Discord Bot y Orquestacion Principal (systemd) | En Progreso |
 | **Fase 11+** | Domotica LAN, Eventos Proactivos y Vision | Planeado |
+
+## Agradecimientos y Creditos
+
+La idea conceptual de crear un asistente con personalidad y memoria persistente esta profundamente inspirada en el proyecto **yui-asistente** creado por **EDAKZIN**. **Abril** nace como una reimaginacion enfocada exclusivamente en el **ultra bajo consumo**, ofreciendo una alternativa viable y altamente eficiente para equipos mas humildes o con recursos limitados.
 
 ## Licencia
 
