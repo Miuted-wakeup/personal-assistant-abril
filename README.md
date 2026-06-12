@@ -33,13 +33,15 @@ El proyecto se esta desarrollando y probando sobre el siguiente hardware de refe
 - **Pantalla**: Mini pantalla dedicada de 7-10 pulgadas conectada por HDMI
 - **Perifericos**: Microfono ambiental USB y parlantes por Jack de 3.5mm o USB
 
+*Nota: Aunque actualmente el proyecto se esta estructurando sobre este PC humilde, la idea principal a futuro es implementarlo en una Raspberry Pi bastante capaz para tener una version miniatura de consumo ultra bajo que siga funcionando sin internet usando el WiFi como via de transmision para los componentes inteligentes de la habitacion.*
+
 ## Modulos y Documentacion Secundaria
 
 La arquitectura esta dividida en modulos independientes. Consulta los siguientes README para mas detalle tecnico:
 
 | Modulo / Carpeta | Descripcion | Enlace |
 |------------------|-------------|--------|
-| **Plan Maestro** | Fases detalladas, tiempos y especificaciones originales. | [Ver Plan](PLAN.md) |
+| **Plan Malevolo** | Fases detalladas, tiempos y especificaciones originales. | [Ver Plan](PLAN.md) |
 | **Backend** | Orquestador, LLM, STT, TTS y herramientas. | [Ver README](backend/README.md) |
 | **Discord Bot** | Cliente para integracion remota. | [Ver README](discord-bot/README.md) |
 | **Assets** | Videos del avatar y configuraciones de voz. | [Ver README](assets/README.md) |
@@ -123,11 +125,12 @@ abril-asistente/
 | **Fase 6** | Motor TTS Local (Kokoro ONNX) | Planeado |
 | **Fase 7-8** | Memoria ChromaDB e Interfaz Visual IPC | Planeado |
 | **Fase 9-10** | Discord Bot y Orquestacion Principal (systemd) | En Progreso |
-| **Fase 11+** | Domotica LAN, Eventos Proactivos y Vision | Planeado |
+| **Fase 11-15**| Domotica LAN, Eventos Proactivos y Vision | Planeado |
+| **Fase 16-18**| OpenClaw, Sensores de Presencia y Cuentas | Planeado |
 
 ## Agradecimientos y Creditos
 
-La idea conceptual de crear un asistente con personalidad y memoria persistente esta profundamente inspirada en el proyecto **yui-asistente** creado por **EDAKZIN**. **Abril** nace como una reimaginacion enfocada exclusivamente en el **ultra bajo consumo**, ofreciendo una alternativa viable y altamente eficiente para equipos mas humildes o con recursos limitados.
+La idea conceptual de crear un asistente con personalidad y memoria persistente esta profundamente inspirada en el proyecto **[yui-asistente](https://github.com/EDAKZIN/yui-asistente)** creado por **[@EDAKZIN](https://github.com/EDAKZIN)**. **Abril** nace como una reimaginacion enfocada exclusivamente en el **ultra bajo consumo**, ofreciendo una alternativa viable y altamente eficiente para equipos mas humildes o con recursos limitados.
 
 ## Licencia
 

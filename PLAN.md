@@ -15,6 +15,8 @@ graph TD
     F8 --> F9[Fase 9: Bot de Discord]
     F9 --> F10[Fase 10: Orquestacion y Automatizacion]
     F10 --> F10_5[Fase 10.5: Interrupcion por Voz - Barge-In]
+    F10_5 --> F11[Fase 11-15: Modulos Avanzados]
+    F11 --> F16[Fase 16-18: Integracion Final OpenClaw y Sensores]
 ```
 
 ## Detalle de Fases y Tareas
@@ -110,23 +112,30 @@ Para transformar a Abril de un asistente pasivo a uno proactivo y conectado con 
 * **Ejemplo**: A partir de las 11:00 PM, el prompt le indicara a Abril: *"Es tarde en la noche. Responde con un tono suave y sugiere descanso"*.
 
 ### 4. Sistema de Alertas del Celular (Fase 14)
-* **Tecnologia**: `KDE Connect` emparejado con Android. Un script lee las notificaciones urgentes y las verbaliza.
+* **Tecnologia**: `KDE Connect` emparejado con tu dispositivo Android. Un script local lee las notificaciones entrantes y las filtra.
+* **Caso de Uso**: Dejas tu celular cargando en otra habitacion o estas lejos del escritorio. Si recibes un mensaje urgente (ej. un WhatsApp de tu familia), Abril te interrumpe y dice: *"Muted, te acaba de llegar un mensaje de tu mama diciendo que ya llego"*. Te permite dictarle una respuesta en voz alta sin tocar tu telefono.
 
 ### 5. Vision Hibrida via Webcam USB (Fase 15)
-* **Tecnologia**: `OpenCV` para capturar fotos y enviar a la API Vision de Groq (Llama 3.2 Vision).
+Habilidad para que Abril "vea" el mundo real y pueda ayudarte en tareas manuales o visuales.
+* **Tecnologia**: `OpenCV` para capturar un fotograma de una Webcam conectada a su hardware, el cual se envia comprimido a la API Vision de Groq (usando Llama 3.2 Vision u otro modelo multimodal).
+* **Caso de Uso**: Le muestras a Abril una placa electronica o un cable roto en tus manos y le dices: *"Abril, mira esto, ¿donde va conectado este cable rojo?"*. Ella analiza la foto en milisegundos y te responde conversacionalmente. Tambien puede servir para que le muestres ropa y te diga si combina.
 
 ---
+### 6. Integracion y Control de la PC Principal (Fase 16 - OpenClaw + MXC)
+Habilidad de Abril para interactuar de manera remota con tu ordenador de uso diario y ejecutar tareas o automatizaciones complejas (abrir programas, revisar correos, organizar ventanas).
+* **Tecnologia**: Framework **OpenClaw** y **Microsoft Execution Containers (MXC)**.
+* **Implementacion**: Para usar las funciones de agente capaz de controlar tu PC, debes instalar OpenClaw y configurarlo exclusivamente en el PC que quieres usar para esto (NO en el hardware de Abril ni en la Raspberry Pi). Abril funcionara como el "cerebro" y enviara las instrucciones por red local a esa instancia de OpenClaw.
+* **Seguridad**: Aprovechando los nuevos contenedores para agentes de Microsoft (MXC), OpenClaw correra en un entorno aislado (sandbox) en tu PC principal. Esto garantiza de manera nativa que si la IA llega a alucinar o intenta algo destructivo, el sistema operativo de Windows bloqueara la accion, protegiendo tus archivos.
 
-## Posibles Implementaciones a Futuro (Fase 16+)
+### 7. Automatizacion Basada en Criterios de Presencia (Fase 17)
+Dotar a la habitacion de sensores fisicos para que Abril reaccione a tu existencia sin necesidad de usar comandos de voz.
+* **Tecnologia**: Integracion de sensores de presencia humana o de micromovimiento (PIR / Radar de microondas) conectados via Wi-Fi (ESP32 o Tuya).
+* **Caso de Uso**: Llegas a tu cuarto despues del trabajo. El sensor detecta que entraste e instantaneamente Abril "despierta" su pantalla, enciende tus luces de ambiente led y te dice proactivamente: *"Hola Muted, bienvenido de nuevo"*. Si sales por mas de 15 minutos, ella misma apaga la iluminacion y la pantalla para mantener su bajo consumo.
 
-### 1. Integracion y Control de la PC Principal
-Habilidad de Abril para interactuar de manera remota con tu ordenador de uso diario a traves de sockets locales.
-
-### 2. Automatizacion Basada en Criterios de Presencia
-Integracion de sensores de presencia humana o movimiento (PIR / Radar de microondas) via Wi-Fi.
-
-### 3. Sincronizacion de Cuentas Personales
-Desarrollo de modulos de autenticacion ligera para integrar calendarios y correos electronicos.
+### 8. Sincronizacion de Cuentas Personales (Fase 18)
+Conectar el cerebro de Abril a tus ecosistemas digitales privados de productividad.
+* **Tecnologia**: Autenticacion ligera OAuth2 para integracion con APIs de Google Calendar, Gmail o Microsoft To-Do.
+* **Caso de Uso**: Te despiertas y preguntas: *"Abril, ¿tengo algo importante hoy?"*. Ella lee tu calendario y responde: *"Tienes la entrega del proyecto a las 2 PM, y por cierto, te acaba de llegar un correo urgente de la universidad"*.
 
 ---
 
@@ -134,9 +143,10 @@ Desarrollo de modulos de autenticacion ligera para integrar calendarios y correo
 
 | Fase | Duracion Estimada | Dificultad |
 | :--- | :--- | :--- |
-| **Fase 1 y 2**: Montaje fisico, Linux e IP estatica | 1 Dia | Media |
-| **Fase 3 y 4**: Entorno Python, Entrada de audio y Wake Word | 2 Dias | Alta |
-| **Fase 4.5 a 6**: Configuracion de Audio, APIs de Groq y Kokoro | 2 Dias | Media |
-| **Fase 7 y 8**: ChromaDB e Integracion IPC con `mpv` | 2 Dias | Alta |
-| **Fase 9 y 10**: Bot de Discord, Orquestador Principal y systemd | 2 Dias | Media |
-| **Fase 11 a 15**: Domotica, Vision, Celular y Proactividad | 3 Dias | Alta |
+| **Fase 1 y 2**: Montaje fisico, OS Linux Headless e IP estatica | 1 a 2 Semanas | Media |
+| **Fase 3 y 4**: Entorno Python, Audio (ALSA) y Wake Word local | 2 a 3 Semanas | Alta |
+| **Fase 4.5 a 6**: APIs de Groq, Filtros DSP y TTS Kokoro | 2 Semanas | Media |
+| **Fase 7 y 8**: Memoria ChromaDB e Integracion IPC con `mpv` | 3 Semanas | Alta |
+| **Fase 9 y 10**: Bot de Discord, Orquestador Principal y systemd | 2 Semanas | Media |
+| **Fase 11 a 15**: Domotica, Vision, Celular y Proactividad | 1 a 2 Meses | Alta |
+| **Fase 16 a 18**: OpenClaw, Sensores de Presencia y Cuentas | Varios Meses | Muy Alta |
