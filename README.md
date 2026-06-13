@@ -100,16 +100,14 @@ abril-asistente/
    pip install -r requirements.txt
    ```
 
-2. **Variables de Entorno**:
-   Crear un archivo `.env` en la raiz con las siguientes claves:
-   ```text
-   GROQ_API_KEY=tu_api_key
-   BRAVE_SEARCH_API_KEY=tu_api_key
-   DISCORD_TOKEN=tu_token
-   ENVIRONMENT=development
-   LOG_LEVEL=INFO
+2. **Descarga de Modelos y Configuración Automática**:
+   Ejecuta el script de inicialización para descargar la red neuronal de Kokoro (TTS) y generar tu plantilla de variables de entorno:
+   ```bash
+   python setup.py
    ```
-   **¿Dónde obtener las claves?**
+   
+   **¿Dónde obtener las claves para el `.env`?**
+   Abre el archivo `.env` recién creado y llénalo:
    - **GROQ_API_KEY**: Crea una cuenta gratuita en [GroqCloud Console](https://console.groq.com/keys) para tener acceso a los modelos Llama ultrarrápidos.
    - **BRAVE_SEARCH_API_KEY**: Regístrate en el [Brave Search API Portal](https://api.search.brave.com/app/keys) y obtén una llave para la capa gratuita (Free Data API, hasta 2000 consultas/mes).
    - **DISCORD_TOKEN**: Entra al [Discord Developer Portal](https://discord.com/developers/applications), crea una App, ve a la pestaña "Bot" y haz clic en "Reset Token". *(Importante: Debes encender los tres "Privileged Gateway Intents" en esa misma página).*
