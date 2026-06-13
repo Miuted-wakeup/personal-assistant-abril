@@ -15,6 +15,7 @@ groq
 kokoro-onnx
 onnxruntime
 soundfile
+sounddevice
 
 # Memory (ChromaDB)
 chromadb
@@ -24,7 +25,7 @@ sentence-transformers
 python-mpv-jsonipc
 
 # Discord
-discord.py
+discord.py[voice]
 
 # Automation & Utils
 APScheduler

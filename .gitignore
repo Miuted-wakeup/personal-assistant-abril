@@ -22,6 +22,9 @@ logs/
 # Assets multimedia pesados (modelos, audios, videos grandes)
 assets/videos/*.mp4
 assets/videos/*.mkv
+assets/*.onnx
+assets/*.pth
+assets/*.bin
 assets/voices/*.onnx
 assets/voices/*.pth
 assets/voices/*.bin

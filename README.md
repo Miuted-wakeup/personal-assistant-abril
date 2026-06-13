@@ -109,22 +109,33 @@ abril-asistente/
    ENVIRONMENT=development
    LOG_LEVEL=INFO
    ```
+   **¿Dónde obtener las claves?**
+   - **GROQ_API_KEY**: Crea una cuenta gratuita en [GroqCloud Console](https://console.groq.com/keys) para tener acceso a los modelos Llama ultrarrápidos.
+   - **BRAVE_SEARCH_API_KEY**: Regístrate en el [Brave Search API Portal](https://api.search.brave.com/app/keys) y obtén una llave para la capa gratuita (Free Data API, hasta 2000 consultas/mes).
+   - **DISCORD_TOKEN**: Entra al [Discord Developer Portal](https://discord.com/developers/applications), crea una App, ve a la pestaña "Bot" y haz clic en "Reset Token". *(Importante: Debes encender los tres "Privileged Gateway Intents" en esa misma página).*
 
 3. **Ejecucion en Modo Prueba (Sin Audio)**:
    ```bash
    python backend/main.py
    ```
 
+4. **Pruebas de Módulos Individuales**:
+   Como la arquitectura es modular, puedes probar cada sentido de Abril por separado:
+   - **Probar Wake Word (Oído)**: Ejecuta `python backend/wake_word.py`. Habla por tu micrófono (temporalmente detecta "Alexa" o "Hey Mycroft" mientras entrenamos la palabra "Abril").
+   - **Probar Síntesis de Voz (Habla)**: Ejecuta `python backend/text_to_speech.py`. Sintetizará y reproducirá una frase de prueba en español de forma totalmente local.
+   - **Probar Puente de Discord (Telepatía)**: Ejecuta `python discord-bot/bot.py`. Abril se pondrá en línea en tu servidor y te responderá si la mencionas (`@Abril`) o si le escribes por Mensaje Directo.
+
 ## Fases de Desarrollo y Planificacion
 
 | Fase | Descripcion | Estado |
 | :--- | :--- | :--- |
 | **Fase 1-3** | Infraestructura, SO Linux Headless, SSH y Entorno | Planeado |
-| **Fase 4** | Entrada de Audio y Wake Word Local (Multi-modelo) | En Progreso |
+| **Fase 4** | Entrada de Audio y Wake Word Local (Multi-modelo) | Completado |
 | **Fase 5** | Conexion Nube Groq STT/LLM y Prompt Dinamico | Completado |
-| **Fase 6** | Motor TTS Local (Kokoro ONNX) | Planeado |
+| **Fase 6** | Motor TTS Local (Kokoro ONNX) | Completado |
 | **Fase 7-8** | Memoria ChromaDB e Interfaz Visual IPC | Planeado |
-| **Fase 9-10** | Discord Bot y Orquestacion Principal (systemd) | En Progreso |
+| **Fase 9** | Discord Bot (Cliente para integracion remota) | Completado |
+| **Fase 10**| Orquestacion Principal (systemd) | Planeado |
 | **Fase 11-15**| Domotica LAN, Eventos Proactivos y Vision | Planeado |
 | **Fase 16-18**| OpenClaw, Sensores de Presencia y Cuentas | Planeado |
 
