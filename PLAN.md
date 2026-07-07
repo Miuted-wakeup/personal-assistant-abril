@@ -2,6 +2,15 @@
 
 Este documento contiene la planificación original y detallada de todas las fases del proyecto Abril, desde la infraestructura física hasta los módulos más avanzados.
 
+## Estado General del Proyecto
+- **Fase 1 a 3 (Entorno y OS):** Completado.
+- **Fase 4 a 6 (Audio, LLM, TTS):** Completado.
+- **Fase 7 (Memoria ChromaDB):** Completado (100% - Persistente con tiempo relativo y filtro anti-loro).
+- **Fase 8 (Avatar Visual IPC):** Completado temporalmente en consola (70% - Chica Anime ASCII a 10 FPS fluida sobre IPC).
+- **Fase 9 (Bot Discord):** Completado (100% - Conexión por MD y Servidores).
+- **Fase 10 (Orquestación continua):** Pendiente.
+
+
 ```mermaid
 graph TD
     F1[Fase 1: Infraestructura y OS] --> F2[Fase 2: Red y SSH Headless]

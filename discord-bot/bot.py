@@ -9,6 +9,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from backend.logger import setup_logger
 from backend.config import DISCORD_TOKEN
 from backend.brain_llm import BrainLLM
+from backend.ipc_server import notifier
 
 logger = setup_logger("DiscordBot")
 
@@ -39,10 +40,18 @@ class AbrilDiscordBot(discord.Client):
             # Mostrar "Abril está escribiendo..."
             async with message.channel.typing():
                 # Ejecutamos el LLM en un hilo separado para no congelar el bot de Discord
+                notifier.set_state("PENSANDO")
                 respuesta = await asyncio.to_thread(self.llm.generate_response, prompt, message.author.name)
                 
                 # Enviar respuesta
+                notifier.set_state("HABLANDO")
                 await message.reply(respuesta)
+                
+                # Volver a idle despues de enviar
+                async def reset_idle():
+                    await asyncio.sleep(2)
+                    notifier.set_state("IDLE")
+                asyncio.create_task(reset_idle())
 
 def run_bot():
     logger.info("Iniciando bot de discord...")

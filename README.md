@@ -57,8 +57,9 @@ abril-asistente/
 │   ├── brain_llm.py          # Cliente Groq LLM (Llama 3.1 con prompt dinamico)
 │   ├── web_search.py         # Busqueda en internet (Brave Search)
 │   ├── text_to_speech.py     # Motor local Kokoro-82M
-│   ├── memory_system.py      # Base de datos vectorial (ChromaDB)
-│   ├── visual_controller.py  # Controlador de mpv via IPC
+│   ├── memory.py             # Base de datos vectorial (ChromaDB)
+│   ├── ascii_frames.py       # Librería de fotogramas ASCII
+│   ├── ipc_server.py         # Servidor de notificaciones de estado por UDP
 │   ├── commands.py           # Control del sistema y llamadas de utilidad
 │   ├── automation.py         # Planificador de tareas proactivas (APScheduler)
 │   ├── domotica.py           # Control de dispositivos locales (tinytuya)
@@ -67,11 +68,14 @@ abril-asistente/
 ├── discord-bot/
 │   ├── bot.py                # Cliente de Discord
 │   └── bridge.py             # Enlace de mensajes con el backend
+├── scripts/
+│   └── ver_memoria.py        # Inspector de base de datos de memoria
 ├── assets/
 │   ├── videos/               # idle.mp4, thinking.mp4, speaking.mp4
 │   └── voices/               # custom_blend.json para Kokoro
 ├── data/
 │   └── chromadb/             # Base de datos local
+├── avatar.py                 # Renderizador del avatar animado ASCII en consola
 ├── config.json               # Configuracion (APIs, audio, entorno)
 ├── .env                      # API Keys (Groq, Brave Search, Discord Token)
 ├── requirements.txt          # Dependencias de Python
@@ -122,16 +126,19 @@ abril-asistente/
    - **Probar Wake Word (Oído)**: Ejecuta `python backend/wake_word.py`. Habla por tu micrófono (temporalmente detecta "Alexa" o "Hey Mycroft" mientras entrenamos la palabra "Abril").
    - **Probar Síntesis de Voz (Habla)**: Ejecuta `python backend/text_to_speech.py`. Sintetizará y reproducirá una frase de prueba en español de forma totalmente local.
    - **Probar Puente de Discord (Telepatía)**: Ejecuta `python discord-bot/bot.py`. Abril se pondrá en línea en tu servidor y te responderá si la mencionas (`@Abril`) o si le escribes por Mensaje Directo.
+   - **Probar Memoria (Hipocampo)**: Ejecuta `python scripts/ver_memoria.py`. Inspecciona y muestra todos los recuerdos que Abril ha guardado sobre ti en ChromaDB en texto claro.
+   - **Probar Avatar ASCII (Cara)**: Ejecuta `python avatar.py`. Abre la cara virtual de Abril en consola, la cual reaccionará en tiempo real al estado del bot de Discord a 10 FPS.
 
 ## Fases de Desarrollo y Planificacion
 
 | Fase | Descripcion | Estado |
 | :--- | :--- | :--- |
-| **Fase 1-3** | Infraestructura, SO Linux Headless, SSH y Entorno | Planeado |
+| **Fase 1-3** | Infraestructura, SO Linux Headless, SSH y Entorno | Completado |
 | **Fase 4** | Entrada de Audio y Wake Word Local (Multi-modelo) | Completado |
 | **Fase 5** | Conexion Nube Groq STT/LLM y Prompt Dinamico | Completado |
 | **Fase 6** | Motor TTS Local (Kokoro ONNX) | Completado |
-| **Fase 7-8** | Memoria ChromaDB e Interfaz Visual IPC | Planeado |
+| **Fase 7** | Memoria Persistente ChromaDB (Embeddings locales) | Completado |
+| **Fase 8** | Avatar Visual interactivo en consola (Anime ASCII) | En Desarrollo (~70%) |
 | **Fase 9** | Discord Bot (Cliente para integracion remota) | Completado |
 | **Fase 10**| Orquestacion Principal (systemd) | Planeado |
 | **Fase 11-15**| Domotica LAN, Eventos Proactivos y Vision | Planeado |

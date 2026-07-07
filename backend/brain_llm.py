@@ -6,6 +6,7 @@ from groq import Groq
 from backend.logger import setup_logger
 from backend.config import GROQ_API_KEY, settings
 from backend.web_search import buscar_en_internet
+from backend.memory import MemoryManager
 
 logger = setup_logger("BrainLLM")
 
@@ -15,6 +16,7 @@ class BrainLLM:
         logger.info(f"iniciando llm: {settings['apis']['groq_model_llm']}")
         self.client = Groq(api_key=GROQ_API_KEY)
         self.model = settings['apis']['groq_model_llm']
+        self.memory = MemoryManager()
         
     def generate_response(self, text_input, user_name="Muted", context=None):
         # genera respuesta de abril
@@ -70,11 +72,19 @@ PERSONALIDAD Y COMPORTAMIENTO:
 - Tus respuestas deben ser MUY CORTAS y conversacionales (1 a 2 oraciones máximo). Menos es más.
 - Responde SIEMPRE en español y usa gramática femenina para ti misma."""
 
+        # Buscar recuerdos relacionados
+        recuerdos = self.memory.query_memory(user=user_name_text, query_text=text_input)
+        if recuerdos:
+            system_prompt += "\n\nRECUERDOS A LARGO PLAZO RELEVANTES:\n"
+            for rec in recuerdos:
+                system_prompt += f"- {rec}\n"
+            system_prompt += "(Usa estos recuerdos SOLO para tener contexto de cosas que pasaron antes. REGLA ESTRICTA: NUNCA repitas textualmente tus respuestas pasadas que aparecen en estos recuerdos, inventa siempre una nueva respuesta fresca).\n"
+
         if not hasattr(self, 'history'):
             self.history = []
 
-        # Agregar input del usuario al historial
-        self.history.append({"role": "user", "content": text_input})
+        # Agregar input del usuario al historial (inyectamos la hora exacta para memoria a corto plazo)
+        self.history.append({"role": "user", "content": f"[{fecha_actual} {hora_actual}] {text_input}"})
 
         messages = [{"role": "system", "content": system_prompt}]
         if context:
@@ -153,6 +163,10 @@ PERSONALIDAD Y COMPORTAMIENTO:
                 final_answer = second_response.choices[0].message.content
                 self.history.append({"role": "assistant", "content": final_answer})
                 logger.debug(f"respuesta post-busqueda: {final_answer}")
+                
+                # Guardar memoria
+                self.memory.add_memory(user=user_name_text, context="chat", text=f"Usuario: {text_input}\nAbril: {final_answer}")
+                
                 return final_answer
                 
             else:
@@ -185,12 +199,20 @@ PERSONALIDAD Y COMPORTAMIENTO:
                                 final_answer = second_response.choices[0].message.content
                                 self.history.append({"role": "assistant", "content": final_answer})
                                 logger.debug(f"respuesta post-busqueda (fallback): {final_answer}")
+                                
+                                # Guardar memoria
+                                self.memory.add_memory(user=user_name_text, context="chat", text=f"Usuario: {text_input}\nAbril: {final_answer}")
+                                
                                 return final_answer
                         except Exception as e:
                             logger.error(f"error parseando tool fallback: {e}")
                             
                 self.history.append({"role": "assistant", "content": respuesta})
                 logger.debug(f"respuesta: {respuesta}")
+                
+                # Guardar memoria
+                self.memory.add_memory(user=user_name_text, context="chat", text=f"Usuario: {text_input}\nAbril: {respuesta}")
+                
                 return respuesta
                 
         except Exception as e:

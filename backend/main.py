@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from backend.logger import setup_logger
 from backend.brain_llm import BrainLLM
+from backend.ipc_server import notifier
 
 logger = setup_logger("Main")
 
@@ -40,26 +41,29 @@ class AbrilAssistant:
                     logger.info(f"cambio de usuario a: {current_user}")
                     continue
                 
+                notifier.set_state("PENSANDO")
                 respuesta = self.llm.generate_response(user_input, user_name=current_user)
+                
+                notifier.set_state("HABLANDO")
                 print(f"\nAbril: {respuesta}")
+                
+                # Simulamos el tiempo de habla (en el futuro esto lo definirá la longitud del audio)
+                time.sleep(2)
+                notifier.set_state("IDLE")
+                
             except KeyboardInterrupt:
                 break
         
         logger.info("apagando abril")
 
     def run(self):
-        # loop principal
-        logger.info("abril en linea")
+        # NOTE: Este esqueleto está reservado para la Fase 10 (Orquestación del ciclo continuo en hardware).
+        # Actualmente, iniciamos en modo texto directo por consola.
+        logger.info("abril en linea (ejecución continua de hardware no integrada aún)")
         try:
             while True:
-                if self.state == "ESPERA":
-                    time.sleep(1)
-                elif self.state == "ESCUCHANDO":
-                    pass
-                elif self.state == "PENSANDO":
-                    pass
-                elif self.state == "HABLANDO":
-                    pass
+                # Mantener el proceso vivo.
+                time.sleep(10)
         except KeyboardInterrupt:
             logger.info("apagando abril")
 
