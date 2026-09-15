@@ -59,116 +59,172 @@ La arquitectura esta dividida en modulos independientes. Consulta los siguientes
 ```text
 abril-asistente/
 ├── backend/
-│   ├── main.py               # Orquestador principal y CLI de pruebas
-│   ├── wake_word.py          # Escucha activa (openWakeWord multimodelo)
-│   ├── speech_to_text.py     # Cliente Groq Whisper API
-│   ├── brain_llm.py          # Cliente Groq LLM (Llama 3.1 con prompt dinamico)
-│   ├── web_search.py         # Busqueda en internet (Brave Search)
-│   ├── text_to_speech.py     # Motor local Kokoro-82M
-│   ├── memory.py             # Base de datos vectorial (ChromaDB)
-│   ├── ascii_frames.py       # Librería de fotogramas ASCII
-│   ├── ipc_server.py         # Servidor de notificaciones de estado por UDP
-│   ├── commands.py           # Control del sistema y llamadas de utilidad
+│   ├── main.py               # Orquestador principal (bucle de voz en vivo y CLI --texto)
+│   ├── wake_word.py          # Detección de activación (modo hybrid_whisper / openWakeWord)
+│   ├── speech_to_text.py     # Transcripción ultrarrápida con Whisper Turbo
+│   ├── brain_llm.py          # Cerebro cognitivo (Groq / Hermes Agent con prompt adaptativo)
+│   ├── hermes_client.py      # Cliente HTTP para el gateway de Hermes Agent
+│   ├── web_search.py         # Búsqueda en internet en tiempo real (Brave Search)
+│   ├── text_to_speech.py     # Síntesis local Kokoro-82M ONNX sanitizada para voz
+│   ├── memory.py             # Gestor de memoria vectorial permanente (ChromaDB)
+│   ├── ascii_frames.py       # Fotogramas de animación ASCII para consola
+│   ├── ipc_server.py         # Servidor UDP para emisión de estados a la interfaz
+│   ├── commands.py           # Control del sistema y comandos de utilidad
 │   ├── automation.py         # Planificador de tareas proactivas (APScheduler)
-│   ├── domotica.py           # Control de dispositivos locales (tinytuya)
-│   ├── config.py             # Configuracion centralizada
-│   └── logger.py             # Logs del sistema con colorlog
+│   ├── domotica.py           # Control de dispositivos locales por Wi-Fi (tinytuya)
+│   ├── config.py             # Configuración centralizada de entorno
+│   └── logger.py             # Sistema de logs con formato y niveles
+├── rust-voice-service/       # Microservicio de hardware de ultra bajo consumo (Rust)
+│   ├── src/
+│   │   ├── main.rs           # Servidor TCP 9001 (Rodio audio) y TCP 9002 (VAD stream)
+│   │   └── audio_input.rs    # Captura CPAL y VAD matemático puro (RMS + ZCR)
+│   ├── Cargo.toml
+│   └── README.md
 ├── discord-bot/
 │   ├── bot.py                # Cliente de Discord
-│   └── bridge.py             # Enlace de mensajes con el backend
+│   └── bridge.py             # Puente de comunicación con el orquestador
 ├── scripts/
-│   └── ver_memoria.py        # Inspector de base de datos de memoria
+│   ├── test_audio_completo.py    # Diagnóstico interactivo de niveles RMS, micrófono y Rust
+│   ├── test_selective_memory.py  # Prueba de función calling y memoria selectiva en BD
+│   ├── check_memory.py           # Inspector de recuerdos y metadatos en ChromaDB
+│   ├── clean_chat_memories.py    # Limpiador de registros de chat obsoletos en ChromaDB
+│   └── ver_memoria.py            # Inspector CLI tradicional de ChromaDB
 ├── assets/
-│   ├── videos/               # idle.mp4, thinking.mp4, speaking.mp4
-│   └── voices/               # custom_blend.json para Kokoro
+│   ├── videos/               # idle.mp4, thinking.mp4, speaking.mp4 (para modo X11/mpv)
+│   └── voices/               # custom_blend.json y modelos para Kokoro
 ├── data/
-│   └── chromadb/             # Base de datos local
-├── avatar.py                 # Renderizador del avatar animado ASCII en consola
-├── config.json               # Configuracion (APIs, audio, entorno)
-├── .env                      # API Keys (Groq, Brave Search, Discord Token)
+│   └── chromadb/             # Base de datos vectorial persistente local
+├── avatar.py                 # Renderizador de rostro ASCII animado a 10 FPS
+├── config.json               # Configuración del sistema (modos de audio, proveedores, etc.)
+├── .env                      # Claves de API privadas (Groq, Brave Search, Discord)
 ├── requirements.txt          # Dependencias de Python
-└── start_abril.sh            # Script de arranque del sistema (X11 + mpv)
+└── start_abril.sh            # Script de arranque en Linux (X11 + Openbox + mpv)
 ```
 
 ## Stack Tecnologico
 
-| Componente | Tecnologia |
-|------------|------------|
-| STT | Groq API (Whisper-large-v3) |
-| LLM | Groq API (Llama-3.1-8b-instant) |
-| TTS | Kokoro-82M ONNX (Espanol local) |
-| Wake Word | openWakeWord (Modelos ONNX locales) |
-| Busqueda Web | Brave Search API |
-| Backend | Python 3.11+ |
-| Interfaz Grafica | mpv (IPC control) sobre X11/Openbox |
-| Domotica | tinytuya (Control LAN local) |
+| Componente | Tecnologia | Detalle |
+|------------|------------|---------|
+| Entrada y VAD | Rust (CPAL + RMS/ZCR) | Stream TCP 9002 continuo sin carga de CPU |
+| Salida de Audio | Rust (Rodio) | Servidor TCP 9001 para reproducción asíncrona |
+| Wake Word | Whisper Turbo / openWakeWord | Detección exacta de "Abril" / "Oye Abril" |
+| STT | Groq Cloud API | whisper-large-v3-turbo (~300ms) |
+| Cerebro / LLM | Groq Cloud API / Hermes Agent | openai/gpt-oss-20b con prompt adaptativo |
+| TTS | Kokoro-82M ONNX | Voz local en español, sanitizada para habla fluida |
+| Memoria | ChromaDB Local | Almacenamiento selectivo de hechos en 3ra persona |
+| Busqueda Web | Brave Search API | Búsquedas en tiempo real vía function calling |
+| Avatar | ASCII Engine / mpv IPC | Consola interactiva o video en pantalla dedicada |
+| Backend | Python 3.11+ | Orquestador híbrido de lógica de negocio |
 
 ## Instalacion y Configuracion Base
 
 1. **Clonar e inicializar entorno (Python)**:
    ```bash
    python -m venv venv
-   source venv/bin/activate
+   source venv/bin/activate  # En Windows: .\venv\Scripts\activate
    pip install -r requirements.txt
    ```
 
 2. **Compilar Microservicio de Hardware (Rust)**:
-   Es necesario tener Rust instalado (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`).
+   Requiere tener Rust instalado (`curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh` o instalador de rustup en Windows):
    ```bash
    cd rust-voice-service
    cargo build --release
    cd ..
    ```
-   *(Nota para Windows: Asegúrate de añadir `rust-voice-service/target` a las exclusiones de Windows Defender para evitar errores al compilar).*
 
-3. **Descarga de Modelos y Configuración Automática**:
-   Ejecuta el script de inicialización para descargar la red neuronal de Kokoro (TTS) y generar tu plantilla de variables de entorno:
-   ```bash
-   python setup.py
-   ```
-   
-   **¿Dónde obtener las claves para el `.env`?**
-   Abre el archivo `.env` recién creado y llénalo:
-   - **GROQ_API_KEY**: Crea una cuenta gratuita en [GroqCloud Console](https://console.groq.com/keys) para tener acceso a los modelos Llama ultrarrápidos.
-   - **BRAVE_SEARCH_API_KEY**: Regístrate en el [Brave Search API Portal](https://api.search.brave.com/app/keys) y obtén una llave para la capa gratuita (Free Data API, hasta 2000 consultas/mes).
-   - **DISCORD_TOKEN**: Entra al [Discord Developer Portal](https://discord.com/developers/applications), crea una App, ve a la pestaña "Bot" y haz clic en "Reset Token". *(Importante: Debes encender los tres "Privileged Gateway Intents" en esa misma página).*
-
-4. **Ejecucion en Modo Prueba (Sin Audio)**:
-   ```bash
-   python backend/main.py
+3. **Variables de Entorno (`.env`)**:
+   Crea tu archivo `.env` en la raíz del proyecto:
+   ```env
+   GROQ_API_KEY=gsk_tu_clave_de_groq_aqui
+   BRAVE_SEARCH_API_KEY=tu_clave_de_brave_search_aqui
+   DISCORD_TOKEN=tu_token_de_discord_opcional
    ```
 
-5. **Pruebas de Módulos Individuales**:
-   Como la arquitectura es modular, puedes probar cada componente por separado:
-   - **Probar Microservicio (Rust)**: Ve a la carpeta `rust-voice-service` y ejecuta `cargo run`. Escuchará el puerto TCP 9001. Mantenlo abierto.
-   - **Probar Wake Word**: Ejecuta `python backend/wake_word.py`. Habla por tu micrófono.
-   - **Probar Síntesis de Voz**: Con el servidor de Rust encendido, ejecuta `python backend/text_to_speech.py`. Python enviará la voz a Rust para reproducirla sin bloqueos.
-   - **Probar Puente de Discord**: Ejecuta `python discord-bot/bot.py`.
-   - **Probar Memoria Local**: Ejecuta `python scripts/ver_memoria.py`.
-   - **Probar Avatar ASCII**: Ejecuta `python avatar.py`.
+## Guia de Pruebas y Diagnostico
+
+Al ser una arquitectura modular, puedes probar cada subsistema de forma independiente o correr el ciclo completo:
+
+### 1. Ciclo de Voz en Vivo (Orquestador Completo)
+Para hablar directamente con Abril usando tu micrófono y altavoces:
+* **Terminal 1 (Microservicio de Hardware en Rust):**
+  ```bash
+  .\rust-voice-service\target\release\rust-voice-service.exe
+  ```
+* **Terminal 2 (Orquestador de Abril):**
+  ```bash
+  python backend/main.py
+  ```
+  Di *"Oye Abril"* o *"Abril"* seguido de tu comando (ej: *"Abril, ¿qué hora tienes?"* o *"Oye Abril, recuerda que mi color favorito es el negro"*).
+
+### 2. Modo Texto de Prueba (Sin Audio ni Micrófono)
+Para probar la lógica del cerebro, memoria y herramientas desde la consola interactiva por teclado:
+```bash
+python backend/main.py --texto
+```
+
+### 3. Diagnóstico de Audio y Micrófono
+Verifica que el micrófono capture energía sonora, que el VAD matemático discrimine ruidos y que la salida por Rust reproduzca correctamente:
+```bash
+python scripts/test_audio_completo.py
+```
+
+### 4. Pruebas de Memoria Persistente (ChromaDB)
+* **Validar guardado selectivo:** Comprueba que no se guarden conversaciones casuales y que solo se almacenen hechos personales:
+  ```bash
+  python scripts/test_selective_memory.py
+  ```
+* **Inspeccionar recuerdos guardados:**
+  ```bash
+  python scripts/check_memory.py
+  ```
+* **Limpiar recuerdos de chat obsoletos:**
+  ```bash
+  python scripts/clean_chat_memories.py
+  ```
+
+### 5. Pruebas de Componentes Aislados
+* **Probar Wake Word:** `python backend/wake_word.py`
+* **Probar Síntesis TTS:** `python backend/text_to_speech.py` (requiere Rust activo en el puerto 9001)
+* **Probar Avatar ASCII:** `python avatar.py`
+* **Probar Bot de Discord:** `python discord-bot/bot.py`
 
 ## Fases de Desarrollo y Planificacion
 
 | Fase | Descripcion | Estado |
 | :--- | :--- | :--- |
 | **Fase 1-3** | Infraestructura, SO Linux Headless, SSH y Entorno | Completado |
-| **Fase 4** | Entrada de Audio y Wake Word Local (Multi-modelo) | Completado |
-| **Fase 5** | Conexion Nube Groq STT/LLM y Prompt Dinamico | Completado |
-| **Fase 6** | Motor TTS Local (Kokoro ONNX) | Completado |
-| **Fase 7** | Memoria Persistente ChromaDB (Embeddings locales) | Completado |
-| **Fase 8** | Avatar Visual interactivo en consola (Anime ASCII) | Pospuesto (Usando ASCII temporal) |
-| **Fase 9** | Discord Bot (Cliente para integracion remota) | Completado |
-| **Fase 10**| Orquestacion Principal (systemd y latencia cero) | Completado |
-| **Fase 11-14**| Eventos Proactivos, Domotica LAN y Celular | Planeado |
-| **Fase 16-18**| OpenClaw, Sensores de Presencia y Cuentas | Planeado |
+| **Fase 4-6** | Wake Word local, Groq STT/LLM y TTS Kokoro ONNX | Completado |
+| **Fase 7** | Memoria Persistente ChromaDB (Embeddings locales y memoria selectiva) | Completado |
+| **Fase 8** | Avatar Visual interactivo (ASCII en consola a 10 FPS e IPC) | En progreso (70%) |
+| **Fase 9** | Discord Bot (Cliente para integración remota) | Completado |
+| **Fase 10**| Orquestación continua en vivo en main.py e instrumentación | Completado |
+| **Fase 11A**| Salida de audio no bloqueante en Rust (Rodio TCP 9001) | Completado |
+| **Fase 11B**| Captura y VAD matemático puro en Rust (CPAL TCP 9002) | Completado |
+| **Fase 11C**| Integración de Hermes Agent (Cerebro persistente multi-canal) | En proceso |
+| **Fase 12** | Dual Launcher (Consola Servidor 24/7 vs Desktop GUI) | Por hacer |
+| **Fase 13** | Domótica Local por Wi-Fi (tinytuya) | Por hacer |
+| **Fase 15** | Integración celular (KDE Connect) | Planeado |
+| **Fase 16** | OpenClaw + MXC (Control remoto de la PC principal) | Por hacer |
+| **Fase 17-18**| Sensores de Presencia y Sincronización de Cuentas | Planeado |
+
+Para ver el desglose técnico y las tareas inmediatas de optimización, consulta el archivo [PLAN.md](PLAN.md).
 
 ## Agradecimientos y Creditos
 
-La idea conceptual de crear un asistente con personalidad y memoria persistente esta profundamente inspirada en el proyecto **[yui-asistente](https://github.com/EDAKZIN/yui-asistente)** creado por **[@EDAKZIN](https://github.com/EDAKZIN)**. **Abril** nace como una reimaginacion enfocada exclusivamente en el **ultra bajo consumo**, ofreciendo una alternativa viable y altamente eficiente para equipos mas humildes o con recursos limitados.
+La idea conceptual de crear un asistente con personalidad y memoria persistente está profundamente inspirada en el proyecto **[yui-asistente](https://github.com/EDAKZIN/yui-asistente)** creado por **[@EDAKZIN](https://github.com/EDAKZIN)**. **Abril** nace como una reimaginación enfocada exclusivamente en el **ultra bajo consumo**, ofreciendo una alternativa viable y altamente eficiente para equipos más humildes o con recursos limitados.
 
-## Licencia
+## Licencia: "Trátenmela Bien"
 
-Proyecto personal desarrollado por **Muted** pero ta para quien quiera usarlo o modificarlo nomas tratenmela bien :p
+Copyright (c) 2026 Muted
 
-PD: si me lo roban no me importa pero al menos dejen los creditos xfa ヾ(＾∇＾)
+Proyecto personal desarrollado por **Muted**, pero está ahí para quien quiera usarlo, clonarlo, estudiarlo o modificarlo a su gusto, nomás tratenmela bien :p
+
+Las únicas condiciones son estas:
+
+1. **Créditos:** Si tomas código de aquí, te basas en este proyecto o te lo vas a robar no me importa, pero al menos déjale los créditos a **Muted** y a los proyectos en los que se inspira (como `yui-asistente`) xfa ヾ(＾∇＾)
+2. **Respeto:** Abril fue hecha con cariño para ser una compañera autónoma, directa y con personalidad en la habitación. Si la vas a modificar, respeta su esencia y no la conviertas en un bot aburrido, corporativo o censurado.
+
+El código se entrega tal cual está. Si algo se rompe, tu PC explota o la IA cobra conciencia, es tu problema.
+
 

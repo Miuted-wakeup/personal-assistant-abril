@@ -8,7 +8,12 @@ Este documento contiene la planificación original y detallada de todas las fase
 - **Fase 7 (Memoria ChromaDB):** Completado (100% - Persistente con tiempo relativo y filtro anti-loro).
 - **Fase 8 (Avatar Visual IPC):** Completado temporalmente en consola (70% - Chica Anime ASCII a 10 FPS fluida sobre IPC).
 - **Fase 9 (Bot Discord):** Completado (100% - Conexión por MD y Servidores).
-- **Fase 10 (Orquestación continua):** Pendiente.
+- **Fase 10 (Orquestación continua):** Completado (100% - Bucle de voz en vivo en main.py con instrumentación y máquina de estados IPC).
+- **Fase 11 (Microservicio Rust Exoesqueleto):** Completado (100% - Fase 11A Salida Rodio 9001 + Fase 11B Entrada CPAL con VAD matemático RMS/ZCR 9002).
+- **Fase 11C (Integración Hermes Agent):** En proceso (Cerebro persistente multi-canal y scheduler proactivo agnóstico de modelos).
+- **Fase 12 (Dual Launcher - Servidor vs Desktop):** Por hacer (Modo Servidor Consola Headless 24/7 y Launcher Desktop con selector de proveedores y modelos locales).
+- **Fase 13 (Domótica Local):** Por hacer (Control de luces y enchufes inteligentes por Wi-Fi mediante tinytuya).
+- **Fase 16 (Integración OpenClaw + PC Principal):** Por hacer (Control remoto de la computadora diaria en sandbox MXC).
 
 ## Filosofia y Arquitectura Base
 Antes de avanzar a los modulos complejos, el proyecto se rige por los siguientes principios para garantizar que la V1 sea rapida, estable y eficiente en nuestro hardware humilde:
@@ -125,9 +130,19 @@ Le clavamos Rust a la chingadera para que no tenga cuellos de botella en la escu
 * **Tecnologia**: Rust, cpal, rodio, y matemáticas puras para el VAD (RMS y Zero-Crossing Rate para los gordos números) en lugar de IA pesada.
 * **Flujo**: El Exoesqueleto (Rust) captura el audio fisico y reproduce la voz sin congelar al Nerd (Python). Se comunican por sockets TCP locales.
 
-### 2. Eventos Proactivos y Tareas Programadas (Fase 12)
-* **Tecnologia**: `APScheduler` en Python.
-* **Ejemplo**: *"Buenos dias. Recuerda que en 30 minutos inicia tu clase"*.
+### 2. Integracion de Hermes Agent (Fase 11C - Cerebro Persistente y Proactivo)
+* **Tecnologia**: Hermes Agent (Nous Research), Gateway OpenAI-compatible en `http://127.0.0.1:8642/v1`.
+* **Proposito**: Unificar la memoria episódica a largo plazo, el aprendizaje adaptativo del usuario, la proactividad (cron autónomo) y la mensajería omnicanal (Discord/Telegram) compartiendo el mismo contexto que el asistente de voz en la habitación.
+* **Agnóstico a proveedores**: Configurado para correr con la clave y modelos de **Groq** por defecto, extensible en el futuro a modelos locales o remotos.
+
+### 3. Dual Launcher: Version Servidor Consola vs Version Desktop GUI (Fase 12)
+* **Modo Servidor / Consola Headless (Principal para Servidor Privado)**:
+  * Ejecución 24/7 sin entorno gráfico pesado.
+  * Interfaz de consola CLI interactiva e integración con servicios systemd/daemon.
+  * Selector por flags o archivo de configuración para conmutar motor de agente (Abril Nativo vs Hermes Agent) y proveedor de tokens (Groq, OpenRouter, Ollama local, etc.).
+* **Modo Desktop / Launcher de Escritorio**:
+  * Ventana gráfica ligera (ej. Tauri o PySide minimalista).
+  * Panel de configuración visual para seleccionar motor de agente (Abril Nativo vs Hermes Agent), proveedor de tokens activo (Groq, modelos locales Ollama/vLLM), testeo de audio y estado del servicio.
 
 ### 3. Control del Entorno (Fase 13 - Domotica Local)
 * **Tecnologia**: `tinytuya` (para dispositivos Tuya/Smart Life).
@@ -171,3 +186,35 @@ Conectar el sistema principal de Abril a tus ecosistemas digitales privados de p
 | **Fase 9 y 10**: Bot de Discord, Orquestador Principal y systemd | 2 Semanas | Media |
 | **Fase 11 a 14**: Domotica, Celular y Proactividad | 1 a 2 Meses | Alta |
 | **Fase 16 a 18**: OpenClaw, Sensores de Presencia y Cuentas | Varios Meses | Muy Alta |
+
+---
+
+## TO DO: Funcional Inmediato
+
+Para que Abril pase a ser una asistente placentera de usar en el día a día, estas son las tareas prioritarias a pulir:
+
+1. **Pulir Tiempos de Respuesta (Latencia End-to-End):**
+   * **Streaming / Pipelining de oraciones hacia Rust:** No esperar a sintetizar toda la parrafada con Kokoro. Sintetizar la primera frase, mandarla al socket de audio en Rust para que empiece a sonar de al toque, y sintetizar las siguientes en segundo plano.
+   * **Audios de relleno scripteados para reducir la sensacion de latencia:** Es casi inevitable tener latencia asi que mientras el LLM y la busqueda web procesan en paralelo, se reproducira un sonido breve o frase corta ("Un momento", "A ver") o sonidos de ambiente para pasar atenuar esa sensación.
+
+2. **Pulir la Voz (Eliminar el sonido robótico):**
+   * **Depuración de voces en Kokoro:** Probar combinaciones de voces (`ef_dora`, `em_alex`, `custom_blend.json`) y ajustar fonetización y velocidad.
+   * **Evaluación de Piper TTS:** Evaluar como alternativa ultraliviana Piper TTS con voces neuronales en español (latinoamericano / España) de alta naturalidad y bajo consumo de CPU.
+
+3. **Avatar y Presencia Visual:**
+   * **Sincronización completa con IPC:** Conectar el visualizador de estados (IDLE, LISTENING, THINKING, HABLANDO) con el bucle real en vivo.
+   * **Modo dual:** Visualizador ASCII en consola para el modo servidor headless y reproductor de video en pantalla secundaria dedicada con `mpv` bajo X11.
+
+4. **Integración con OpenClaw (Control de la PC Principal):**
+   * Configurar la comunicación entre el servidor de Abril (servidor privado / Raspberry Pi) y la PC principal de Muted. (o la tuya)
+   * Ejecutar tareas del ordenador diario (abrir programas, revisar correos, automatizaciones) aisladas en contenedores seguros MXC.
+
+5. **Discord (Unificación de Telepatía):**
+   * Unificar el bot de Discord con el nuevo orquestador y la memoria de ChromaDB / Hermes para que hablar por Discord use el mismo cerebro que hablar en la habitación.
+
+6. **Domótica Local:**
+   * Conectar `backend/domotica.py` con `tinytuya` para que Abril pueda apagar o encender las luces de la habitación mediante Function Calling por voz (*"Abril, apaga las luces"*).
+
+7. **Dual Launcher:**
+   * **Modo Servidor / Consola Headless (24/7):** Versión ligera sin interfaz gráfica para correr de forma perpetua en el servidor privado de Muted. Permite configurar la capa de agente (Abril Nativo o Hermes Agent) y el proveedor del modelo (Groq, Ollama local, etc.).
+   * **Modo Desktop GUI:** Launcher gráfico con selector visual para conmutar entre orquestadores (Abril Nativo vs Hermes Agent), proveedores de modelo (Groq, Ollama/vLLM local) y monitoreo de periféricos.

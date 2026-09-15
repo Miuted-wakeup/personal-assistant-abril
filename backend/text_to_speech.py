@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import sounddevice as sd
@@ -23,16 +24,25 @@ class TextToSpeech:
         logger.info("Motor TTS listo.")
 
     def speak(self, text, voice="ef_dora"): # Voz femenina en español ('e' de Español, 'f' de Female)
+        if not text or not text.strip():
+            return 0.0
+
+        clean_text = re.sub(r'[*_#`~]', '', text).strip()
+        if not clean_text:
+            return 0.0
+
         if not self.kokoro:
-            logger.warning(f"Simulando voz (modelo no cargado): {text}")
-            return
+            logger.warning(f"Simulando voz (modelo no cargado): {clean_text}")
+            return 0.0
             
-        logger.debug(f"Hablando: {text[:30]}...")
+        logger.debug(f"Hablando: {clean_text[:30]}...")
         # Generar audio
         # lang="es" es el código ISO para Español que espeak espera
         samples, sample_rate = self.kokoro.create(
-            text, voice=voice, speed=1.0, lang="es" 
+            clean_text, voice=voice, speed=1.05, lang="es" 
         )
+        duration = len(samples) / float(sample_rate)
+
         # Intentar enviar el audio al Exoesqueleto de Rust
         import socket
         import io
@@ -54,6 +64,8 @@ class TextToSpeech:
             logger.warning("Rust Exo-skeleton no detectado en el puerto 9001. Usando sounddevice (bloqueante)...")
             sd.play(samples, sample_rate)
             sd.wait()
+
+        return duration
 if __name__ == "__main__":
     print("Iniciando prueba aislada de TTS...")
     tts = TextToSpeech()

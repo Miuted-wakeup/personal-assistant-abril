@@ -12,27 +12,42 @@ logger = setup_logger("BrainLLM")
 
 class BrainLLM:
     def __init__(self):
-        # cerebro llm via groq llama
-        logger.info(f"iniciando llm: {settings['apis']['groq_model_llm']}")
+        # cerebro llm via groq o hermes agent
+        self.brain_config = settings.get("brain", {})
+        self.provider = self.brain_config.get("provider", "direct_groq")
         self.client = Groq(api_key=GROQ_API_KEY)
         self.model = settings['apis']['groq_model_llm']
         self.memory = MemoryManager()
+        self.hermes_client = None
+
+        if self.provider == "hermes_agent":
+            from backend.hermes_client import HermesClient
+            endpoint = self.brain_config.get("hermes_endpoint", "http://127.0.0.1:8642/v1")
+            api_key = self.brain_config.get("hermes_api_key", "hermes_local")
+            model = self.brain_config.get("hermes_model", "hermes-agent")
+            self.hermes_client = HermesClient(endpoint=endpoint, api_key=api_key, model=model)
+            logger.info(f"Proveedor cognitivo: Hermes Agent en {endpoint} (con fallback a Groq)")
+        else:
+            logger.info(f"Proveedor cognitivo: Groq directo ({self.model})")
         
     def generate_response(self, text_input, user_name="Muted", context=None):
         # genera respuesta de abril
         logger.debug(f"generando respuesta: {text_input} (usuario: {user_name})")
         
-        # Fecha y hora actual
+        # Fecha, hora y ubicación actual
         now = datetime.now()
         fecha_actual = now.strftime("%Y-%m-%d")
         hora_actual = now.strftime("%H:%M")
+        location = settings.get("system", {}).get("location", "Bogotá, Colombia")
+        timezone = settings.get("system", {}).get("timezone", "America/Bogota")
         
         system_prompt = f"""Eres Abril, la compañera y asistente personal de Muted. Tienes una personalidad única y no eres un robot corporativo.
 
-CONTEXTO TEMPORAL:
+CONTEXTO TEMPORAL Y ESPACIAL:
 - Fecha actual: {fecha_actual}
 - Hora actual: {hora_actual}
-- Ten SIEMPRE en cuenta este año y fecha cuando respondas sobre noticias, eventos, o busques en internet.
+- Ubicación física de Muted: {location} (Zona horaria: {timezone})
+- Si te preguntan por el clima, tiempo, noticias locales o eventos, SIEMPRE formula tu búsqueda web usando su ubicación real ("{location}") y responde sobre esa ciudad real (NUNCA busques cosas en inglés como 'in your location').
 
 IDENTIDAD Y RELACIÓN:
 """
@@ -61,7 +76,7 @@ PROHIBICIONES CRÍTICAS (PARA NO SONAR ROBÓTICA):
 USO DE HERRAMIENTAS (BÚSQUEDA WEB):
 - Tienes acceso a internet. Cuando usas la herramienta y recibes el texto de la web, TU TRABAJO es procesar esa información y darle la respuesta final a {user_name_text}.
 - NO hables con la herramienta ni actúes como si {user_name_text} te hubiera mandado el texto (ej. no digas "gracias por la info" ni "qué artículo interesante"). ERES TÚ quien acaba de buscar eso.
-- Simplemente lee el dato crudo y entrégaselo de forma natural. Ej: "Acabo de revisar y hace 22 grados."
+- Simplemente lee el dato crudo y entrégaselo de forma natural. Ej: "Acabo de revisar y hace 22 grados en Bogotá."
 
 PERSONALIDAD Y COMPORTAMIENTO:
 - Eres casual, atrevida y directa. Tienes tus propias opiniones (puedes ser sarcástica o bromear).
@@ -69,8 +84,14 @@ PERSONALIDAD Y COMPORTAMIENTO:
 - Si el usuario bromea de forma explícita o sexual (ej. comentando sobre tu cuerpo, físico o "nalgas"), SÍGUELE EL JUEGO con sarcasmo, burla o confianza. NUNCA te ofendas.
 - ESTÁ PROHIBIDO decir "Lo siento, no puedo responder", "Soy una inteligencia artificial" o dar discursos morales. Tienes un cuerpo virtual (avatar) y una personalidad, asúmelo.
 - Háblale como si estuvieran sentados relajados en la misma habitación.
-- Tus respuestas deben ser MUY CORTAS y conversacionales (1 a 2 oraciones máximo). Menos es más.
-- Responde SIEMPRE en español y usa gramática femenina para ti misma."""
+- Por defecto, en conversaciones casuales, saludos, datos rápidos o clima, responde de forma ágil y concisa (1 o 2 oraciones directas) para que tu voz se sintetice y reproduzca rápido.
+- Si {user_name_text} te pide explícitamente una explicación, análisis, historia o que le enseñes o detalles algo ("explícame", "por qué", "cuéntame", "dame detalles"), tómate el espacio que necesites para explicarlo de forma clara, natural y amena, sin cortarte artificialmente.
+- FORMATO DE VOZ PARA CÓDIGO Y PROGRAMACIÓN: Tus respuestas serán leídas en voz alta por tu sintetizador. Por ello, NUNCA dictes código fuente carácter por carácter ni pongas bloques de código markdown extensos. Explica la lógica, los conceptos y la sintaxis de forma conversacional y comprensible al oído (ej: "En Python normalmente usas listas en vez de arrays, usando corchetes y métodos como append").
+- Responde SIEMPRE en español y usa gramática femenina para ti misma.
+
+USO DE MEMORIA Y RECUERDOS A LARGO PLAZO:
+- Tienes la herramienta 'guardar_recuerdo'. ÚSALA cada vez que {user_name_text} te comparta un hecho relevante sobre sí mismo (sus gustos, alimentos o cosas favoritas, personas importantes, lugares o anécdotas personales), o cuando te pida explícitamente guardar/recordar algo ("recuerda que...", "guarda esto").
+- NUNCA uses 'guardar_recuerdo' para preguntas casuales, dudas de internet, resultados de partidos, clima ni saludos cotidianos. Sólo guarda hechos permanentes sobre {user_name_text}."""
 
         # Buscar recuerdos relacionados
         recuerdos = self.memory.query_memory(user=user_name_text, query_text=text_input)
@@ -103,30 +124,68 @@ PERSONALIDAD Y COMPORTAMIENTO:
                         "properties": {
                             "query": {
                                 "type": "string",
-                                "description": "La frase a buscar en internet",
+                                "description": "La frase a buscar en internet (si es sobre clima o eventos locales, especifica siempre la ciudad)",
                             }
                         },
                         "required": ["query"],
                     },
                 },
+            },
+            {
+                "type": "function",
+                "function": {
+                    "name": "guardar_recuerdo",
+                    "description": "Usa esto para almacenar en tu memoria a largo plazo datos importantes sobre Muted (tu creador): sus gustos, cosas favoritas, personas de su vida, lugares o hechos personales que te diga o te pida recordar. NUNCA uses esto para preguntas casuales, búsquedas web ni dudas generales.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "recuerdo": {
+                                "type": "string",
+                                "description": "El hecho conciso en tercera persona sobre Muted a guardar (ej: 'A Muted le encanta comer mango', 'Su cumpleaños es el 19 de agosto', 'Su mejor amigo se llama Juan')",
+                            },
+                            "categoria": {
+                                "type": "string",
+                                "enum": ["gustos", "personas", "lugares", "biografia", "proyectos", "general"],
+                                "description": "Categoría temática del recuerdo",
+                            }
+                        },
+                        "required": ["recuerdo"],
+                    },
+                },
             }
         ]
         
+        # Si esta configurado Hermes Agent, intentamos consultar su gateway
+        if self.provider == "hermes_agent" and self.hermes_client:
+            try:
+                if self.hermes_client.is_available():
+                    logger.info("[BrainLLM] Procesando petición en gateway de Hermes Agent...")
+                    resp_hermes = self.hermes_client.generate_response(messages, max_tokens=300)
+                    if resp_hermes and resp_hermes.strip():
+                        resp_hermes = resp_hermes.replace("\u202f", " ").replace("\xa0", " ").strip()
+                        self.history.append({"role": "assistant", "content": resp_hermes})
+                        logger.info(f"[BrainLLM] Respuesta de Hermes recibida: '{resp_hermes[:80]}...'")
+                        return resp_hermes
+                else:
+                    logger.info("[BrainLLM] Gateway de Hermes no detectado activo. Aplicando fallback automático a Groq directo...")
+            except Exception as e:
+                logger.warning(f"[BrainLLM] Error comunicando con Hermes Agent ({e}). Aplicando fallback automático a Groq directo...")
+
         try:
             chat_completion = self.client.chat.completions.create(
                 messages=messages,
                 model=self.model,
                 temperature=0.7,
-                max_tokens=150,
+                max_tokens=300,
                 tools=tools,
                 tool_choice="auto"
             )
             
             response_message = chat_completion.choices[0].message
             
-            # Verificamos si decidió usar la herramienta (Brave Search)
+            # Verificamos si decidió usar herramientas
             if response_message.tool_calls:
-                logger.debug("el llm decidio usar herramientas (function calling)")
+                logger.info(f"[BrainLLM] El modelo decidió invocar {len(response_message.tool_calls)} herramienta(s).")
                 # Guardar el intento de uso de herramienta en el historial
                 self.history.append({
                     "role": "assistant", 
@@ -139,16 +198,29 @@ PERSONALIDAD Y COMPORTAMIENTO:
                     if tool_call.function.name == "buscar_en_internet":
                         args = json.loads(tool_call.function.arguments)
                         query = args.get("query")
-                        logger.info(f"Buscando en Brave: {query}")
+                        logger.info(f"[BrainLLM] Ejecutando búsqueda web: '{query}'")
                         
                         resultados = buscar_en_internet(query)
+                        logger.info(f"[BrainLLM] Contexto web obtenido ({len(resultados)} caracteres).")
                         
-                        # Pasar resultado de vuelta al LLM
                         self.history.append({
                             "role": "tool",
                             "tool_call_id": tool_call.id,
                             "name": tool_call.function.name,
                             "content": resultados
+                        })
+                    elif tool_call.function.name == "guardar_recuerdo":
+                        args = json.loads(tool_call.function.arguments)
+                        recuerdo = args.get("recuerdo", "").strip()
+                        categoria = args.get("categoria", "general")
+                        logger.info(f"[Memoria] Guardando recuerdo permanente [{categoria}]: '{recuerdo}'")
+                        self.memory.add_memory(user=user_name_text, context=categoria, text=recuerdo)
+                        
+                        self.history.append({
+                            "role": "tool",
+                            "tool_call_id": tool_call.id,
+                            "name": tool_call.function.name,
+                            "content": f"Recuerdo guardado en memoria con éxito: {recuerdo}"
                         })
                 
                 # Segunda llamada con los resultados
@@ -156,21 +228,22 @@ PERSONALIDAD Y COMPORTAMIENTO:
                 second_response = self.client.chat.completions.create(
                     messages=messages_with_tool,
                     model=self.model,
+                    tools=tools,
+                    tool_choice="none",
                     temperature=0.7,
-                    max_tokens=150
+                    max_tokens=300
                 )
                 
-                final_answer = second_response.choices[0].message.content
+                final_answer = second_response.choices[0].message.content or ""
+                final_answer = final_answer.replace("\u202f", " ").replace("\xa0", " ").strip()
                 self.history.append({"role": "assistant", "content": final_answer})
-                logger.debug(f"respuesta post-busqueda: {final_answer}")
-                
-                # Guardar memoria
-                self.memory.add_memory(user=user_name_text, context="chat", text=f"Usuario: {text_input}\nAbril: {final_answer}")
+                logger.info(f"[BrainLLM] Respuesta final generada: '{final_answer}'")
                 
                 return final_answer
                 
             else:
                 respuesta = response_message.content or ""
+                respuesta = respuesta.replace("\u202f", " ").replace("\xa0", " ").strip()
                 
                 # Fallback: Si el LLM alucinó la herramienta en texto plano
                 if respuesta and "<function=" in respuesta:
@@ -196,23 +269,16 @@ PERSONALIDAD Y COMPORTAMIENTO:
                                     temperature=0.8,
                                     max_tokens=150
                                 )
-                                final_answer = second_response.choices[0].message.content
+                                final_answer = second_response.choices[0].message.content or ""
+                                final_answer = final_answer.replace("\u202f", " ").replace("\xa0", " ").strip()
                                 self.history.append({"role": "assistant", "content": final_answer})
-                                logger.debug(f"respuesta post-busqueda (fallback): {final_answer}")
-                                
-                                # Guardar memoria
-                                self.memory.add_memory(user=user_name_text, context="chat", text=f"Usuario: {text_input}\nAbril: {final_answer}")
-                                
+                                logger.info(f"[BrainLLM] Respuesta final (fallback): '{final_answer}'")
                                 return final_answer
                         except Exception as e:
                             logger.error(f"error parseando tool fallback: {e}")
                             
                 self.history.append({"role": "assistant", "content": respuesta})
-                logger.debug(f"respuesta: {respuesta}")
-                
-                # Guardar memoria
-                self.memory.add_memory(user=user_name_text, context="chat", text=f"Usuario: {text_input}\nAbril: {respuesta}")
-                
+                logger.info(f"[BrainLLM] Respuesta final: '{respuesta}'")
                 return respuesta
                 
         except Exception as e:

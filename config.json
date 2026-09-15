@@ -2,11 +2,14 @@
   "system": {
     "name": "Abril",
     "language": "es",
-    "timezone": "America/Bogota"
+    "timezone": "America/Bogota",
+    "location": "Bogotá, Colombia"
   },
   "audio": {
-    "wake_word_general": "abril",
-    "wake_word_privado": "escucha abril",
+    "wake_word_mode": "hybrid_whisper",
+    "wake_word_keywords": ["abril", "oye abril", "escucha abril", "hola abril"],
+    "openwakeword_model": "alexa",
+    "openwakeword_threshold": 0.85,
     "input_device_index": null,
     "sample_rate": 16000
   },
@@ -14,7 +17,14 @@
     "mpv_socket": "/tmp/mpv-socket"
   },
   "apis": {
-    "groq_model_llm": "llama-3.1-8b-instant",
-    "groq_model_stt": "whisper-large-v3"
+    "groq_model_llm": "openai/gpt-oss-20b",
+    "groq_model_stt": "whisper-large-v3-turbo"
+  },
+  "brain": {
+    "provider": "hermes_agent",
+    "fallback_to_groq": true,
+    "hermes_endpoint": "http://127.0.0.1:8642/v1",
+    "hermes_api_key": "hermes_local",
+    "hermes_model": "hermes-agent"
   }
 }

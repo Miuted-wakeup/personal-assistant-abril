@@ -34,4 +34,8 @@ Windows Defender suele bloquear los archivos intermedios de compilacion de Rust 
    cargo run
    ```
 
-Una vez que la consola diga "Escuchando peticiones WAV", puedes correr el backend de Python, el cual detectara el puerto abierto y redirigira el audio generado hacia Rust sin interrumpir sus demas procesos.
+Una vez que la consola confirme:
+- `Audio de salida listo. Escuchando peticiones WAV en 127.0.0.1:9001...`
+- `Stream de micrófono listo. Transmitiendo audio activo en 127.0.0.1:9002...`
+
+Puedes ejecutar el backend de Python (`backend/wake_word.py` o `backend/main.py`), el cual se conectará automáticamente a los puertos locales de Rust sin congelar la CPU ni depender de PyAudio.

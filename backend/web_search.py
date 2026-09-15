@@ -15,12 +15,12 @@ class BraveSearch:
 
     def search(self, query, max_results=5):
         if not query:
-            return "No especificaste qué buscar"
+            return "No especificaste que buscar"
             
         if not self.api_key or self.api_key == "ingresa_tu_api_key_de_brave_aqui":
             return "Error: No tengo acceso a internet porque falta mi llave de Brave Search."
             
-        logger.info(f"buscando en internet: '{query}'")
+        logger.info(f"Buscando en Brave Search: '{query}'")
         
         headers = {
             "Accept": "application/json",
@@ -37,31 +37,40 @@ class BraveSearch:
         try:
             response = requests.get(self.api_url, headers=headers, params=params, timeout=10)
             if response.status_code == 401:
-                return "Error: API key de Brave inválida o expirada."
+                logger.error("API key de Brave invalida o expirada.")
+                return "Error: API key de Brave invalida o expirada."
             if response.status_code != 200:
-                return f"Error en búsqueda: {response.status_code}"
+                logger.error(f"Error HTTP {response.status_code} en Brave Search")
+                return f"Error en busqueda: {response.status_code}"
                 
             data = response.json()
             web_results = data.get("web", {}).get("results", [])
             
             if not web_results:
-                return "No encontré información sobre eso en internet."
+                logger.info(f"Brave Search no encontro resultados para '{query}'")
+                return "No encontre informacion sobre eso en internet."
                 
+            logger.info(f"Brave Search retorno {len(web_results)} resultados:")
             summary_parts = []
-            for res in web_results[:max_results]:
-                content = res.get("description", "")
-                if content:
-                    summary_parts.append(content.strip())
+            for i, res in enumerate(web_results[:max_results]):
+                title = res.get("title", "Sin titulo")
+                desc = res.get("description", "")
+                url = res.get("url", "")
+                logger.info(f"  [{i+1}] {title} ({url[:45]}...) -> {desc[:80]}...")
+                if desc:
+                    summary_parts.append(f"Fuente ({title}): {desc.strip()}")
             
-            return " ".join(summary_parts) if summary_parts else "Encontré enlaces pero sin descripción útil."
+            resumen_final = " ".join(summary_parts) if summary_parts else "Se encontraron enlaces sin descripcion util."
+            logger.debug(f"Contenido final sintetizado para LLM ({len(resumen_final)} caracteres)")
+            return resumen_final
             
         except Exception as e:
-            logger.error(f"error en búsqueda: {e}")
-            return "Hubo un error de conexión al buscar en internet."
+            logger.error(f"Error de conexion en busqueda: {e}")
+            return "Hubo un error de conexion al buscar en internet."
 
 # Instancia global
 brave_search = BraveSearch()
 
 def buscar_en_internet(query):
-    """Función que será llamada por el LLM"""
+    # Funcion invocada por el Function Calling del LLM
     return brave_search.search(query)

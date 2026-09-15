@@ -55,3 +55,6 @@ desktop.ini
 # Caché y Tests de Python extra
 .pytest_cache/
 .mypy_cache/
+
+# Extensiones y herramientas externas
+.kombai/
